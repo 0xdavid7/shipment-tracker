@@ -21,6 +21,12 @@ each shipment whose `active` value is `true`, check the shipment once today.
 - Do not expose PO numbers, supplier names, material types, weight, or shipment
   identifiers in a public web search query unless the carrier's official form
   requires that exact tracking identifier.
+- For each active shipment, obtain the estimated departure date and place, and
+  the estimated arrival date and place, from the carrier's official tracking
+  page. Use only values the carrier explicitly provides; do not infer a date or
+  place from a route, vessel schedule, or another event. If either estimate is
+  unavailable or cannot be verified, save its date and place as null and explain
+  the limitation in `verification_details`.
 
 ## Save and report
 
@@ -30,20 +36,31 @@ each shipment whose `active` value is `true`, check the shipment once today.
   values needed to detect status or ETA changes. Include `checked_at`,
   `shipment_id`, `carrier`, `status`, `previous_status`, `status_changed`,
   `eta`, `previous_eta`, `eta_changed`, `latest_event`, `tracking_url`, and
-  `verification` (`verified`, `needs_manual_check`, or
+  `verification_details`, and `verification` (`verified`, `needs_manual_check`, or
   `missing_tracking_number`). When the check is unverified, keep the previous
   verified status and ETA instead of replacing them with guesses.
+- Save shipment details and the estimated departure and arrival to
+  `racking-results.json`, preserving the latest result for each
+  `shipment_id`. Include `checked_at`, `shipment_id`, `material_type`,
+  `supplier`, `carrier`, `estimated_departure` (`place` and `date`),
+  `estimated_arrival` (`place` and `date`), `booking_number`,
+  `bill_of_lading_number`, `order_type`, `transport_mode`, `po_number`, and
+  `weight` (`value` and `unit`). Use null for unavailable values; never guess.
+  Take shipment details from the corresponding fields in `shipments.json` and
+  estimates from the verified official carrier page. Keep the status and ETA
+  history in `tracking-results.json`.
 - Show the results and any change alerts only in the Codex desktop/mobile app.
   Do not send email or use another notification channel.
-- Format the results as a Markdown table. Start with these columns, in this
-  order: `shipment_id`, `active`, `basic_information`, and
-  `shipping_information`. Include `status`, `eta`, `latest_event`,
-  `verification`, and `tracking_url` columns as well, so the table reports the
-  tracking results. Include one row per shipment checked, keeping each
-  information object in its corresponding cell. Escape any pipe characters so
-  the table remains valid.
+- Format the shipment details as a Markdown table with these columns, in this
+  order: `material_type`, `supplier`, `carrier`, `Estimated departure (place + date)`,
+  `Estimated arrival (place + date)`, `booking_number`,
+  `bill_of_lading_number`, `order_type`, `shipment_id`, `transport_mode`,
+  `po_number`, and `weight (value + unit)`. Render each estimate as its place
+  and date, and weight as its value and unit. Use an empty cell when a value is
+  unavailable. Include one row per active shipment and escape any pipe
+  characters so the table remains valid.
 - Summarize verified status or ETA changes before unchanged shipments, followed
   by shipments that need manual checks. If there are no active shipments, say
-  so and show an empty results table with the required columns.
+  so and show an empty shipment details table with the required columns.
 - Keep the daily result and any notifications in Codex Scheduled so the user
   can review them in the Codex desktop/mobile app.
