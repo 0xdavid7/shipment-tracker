@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shipment tracker</title>
+  <style>
+    :root { color-scheme: light; font: 15px/1.45 "Segoe UI", system-ui, sans-serif; color: #182230; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #12304a; color: white; padding: 24px max(24px, calc((100vw - 1040px) / 2)); }
+    header h1 { margin: 0 0 4px; font-size: 25px; }
+    header p { margin: 0; color: #d1dfeb; }
+    main { max-width: 1040px; margin: 24px auto; padding: 0 20px 40px; }
+    section { margin: 0 0 18px; padding: 22px; border: 1px solid #dbe3ec; border-radius: 12px; background: white; box-shadow: 0 2px 8px #19334d0a; }
+    h2 { margin: 0 0 16px; font-size: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+    label { display: flex; flex-direction: column; gap: 5px; color: #34445a; font-weight: 600; }
+    input, select { width: 100%; min-height: 40px; border: 1px solid #b9c6d4; border-radius: 7px; padding: 8px 10px; color: #182230; background: white; font: inherit; }
+    input:focus, select:focus { outline: 3px solid #a9d9ff; border-color: #2475b7; }
+    .hint { display: block; margin-top: 12px; color: #5a6878; font-size: 13px; }
+    .weight { display: grid; grid-template-columns: 1fr 130px; gap: 8px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    button { min-height: 40px; border: 0; border-radius: 7px; padding: 9px 15px; color: white; background: #1769aa; font: 600 14px/1.2 "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+    button.secondary { color: #1d3954; background: #e7eef5; }
+    button.danger { color: #8d2020; background: #ffeded; }
+    button:hover { filter: brightness(.96); }
+    .status { min-height: 24px; margin-top: 12px; color: #17613a; }
+    .status.error { color: #a21d24; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid #e4eaf0; text-align: left; vertical-align: top; }
+    th { color: #536477; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    td:last-child { white-space: nowrap; }
+    .empty { color: #657487; }
+    .check { display: flex; flex-direction: row; align-items: center; gap: 9px; margin-top: 16px; }
+    .check input { width: 18px; min-height: 18px; }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } main { margin-top: 14px; } section { padding: 17px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Shipment tracker</h1>
+    <p>Add shipments, then download the list for the daily Codex check.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Daily email recipients</h2>
+      <label for="recipients">Email addresses, separated by commas
+        <input id="recipients" type="text" autocomplete="email" placeholder="logistics@example.com, buyer@example.com">
+      </label>
+      <span class="hint">Emails are sent by the scheduled Codex task only if an email app is connected there.</span>
+    </section>
+
+    <form id="shipment-form">
+      <section>
+        <h2>Basic information</h2>
+        <div class="grid">
+          <label for="shipment-id">Shipment ID
+            <input id="shipment-id" type="text" placeholder="Leave blank to generate one">
+          </label>
+          <label for="order-type">Order type
+            <input id="order-type" type="text" placeholder="For example: Purchase order">
+          </label>
+          <label for="transport-mode">Transport mode
+            <select id="transport-mode"><option value="Ocean">Ocean</option><option value="Air">Air</option><option value="Road">Road</option><option value="Other">Other</option></select>
+          </label>
+          <label for="po-number">PO number
+            <input id="po-number" type="text">
+          </label>
+          <label for="supplier">Supplier
+            <input id="supplier" type="text">
+          </label>
+          <label for="material-type">Material type
+            <input id="material-type" type="text">
+          </label>
+          <label>Weight
+            <span class="weight"><input id="weight-value" type="number" min="0" step="any" placeholder="Optional"><select id="weight-unit"><option value="kg">kg</option><option value="lb">lb</option><option value="t">t</option></select></span>
+          </label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Shipping information</h2>
+        <div class="grid">
+          <label for="carrier">Carrier
+            <select id="carrier"></select>
+          </label>
+          <label for="reference-type">Tracking number to check
+            <select id="reference-type">
+              <option value="bill_of_lading">Bill of lading</option>
+              <option value="booking">Booking</option>
+              <option value="container">Container</option>
+            </select>
+          </label>
+          <label for="bl-number">Bill of lading number
+            <input id="bl-number" type="text">
+          </label>
+          <label for="booking-number">Booking number
+            <input id="booking-number" type="text">
+          </label>
+          <label for="container-number">Container number
+            <input id="container-number" type="text">
+          </label>
+          <label for="shipment-recipients">Extra email recipients for this shipment
+            <input id="shipment-recipients" type="text" placeholder="Optional; separate addresses with commas">
+          </label>
+        </div>
+        <label class="check"><input id="active" type="checkbox" checked> Include this shipment in the daily check</label>
+        <span class="hint">Enter at least one tracking number and choose which one the daily check should use. Public carrier sites may require a manual check.</span>
+        <div class="actions">
+          <button id="save-shipment" type="submit">Add shipment</button>
+          <button id="cancel-edit" class="secondary" type="button" hidden>Cancel edit</button>
+        </div>
+        <div id="form-status" class="status" role="status" aria-live="polite"></div>
+      </section>
+    </form>
+
+    <section>
+      <h2>Shipment list</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Shipment ID</th><th>Carrier</th><th>PO</th><th>Tracking number</th><th>Daily check</th><th></th></tr></thead>
+        <tbody id="shipment-rows"></tbody>
+      </table></div>
+      <div class="actions">
+        <button id="download" type="button">Download shipments.json</button>
+        <button id="import" class="secondary" type="button">Import shipments.json</button>
+        <input id="import-file" type="file" accept="application/json,.json" hidden>
+      </div>
+      <div id="list-status" class="status" role="status" aria-live="polite"></div>
+      <span class="hint">Your draft list stays in this browser on this computer. Download the JSON file after changes and put it in the Codex project folder.</span>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+    const STORAGE_KEY = "shipment-tracker-v1";
+    const carriers = [
+      ["Maersk (MSK)", "https://www.maersk.com/tracking/"],
+      ["MSC", "https://www.msc.com/en/track-a-shipment"],
+      ["CMA CGM", "https://www.cma-cgm.com/ebusiness/tracking"],
+      ["COSCO", "https://elines.coscoshipping.com/"],
+      ["Evergreen (EMC)", "https://www.shipmentlink.com/servlet/TDB1_CargoTracking.do"],
+      ["ONE", "https://www.one-line.com/"],
+      ["Hapag-Lloyd", "https://www.hapag-lloyd.com/en/online-business/track/track.html"],
+      ["OOCL", "https://www.oocl.com/"],
+      ["Yang Ming", "https://www.yangming.com/en/esolution/tracking/cargo_tracking"],
+      ["HMM", "https://www.hmm21.com/e-service/general/trackNTrace/TrackNTrace.do"],
+      ["PIL", "https://www.pilship.com/"],
+      ["ZIM", "https://www.zim.com/"]
+    ];
+    const $ = (id) => document.getElementById(id);
+    let shipments = [];
+    let editIndex = -1;
+
+    for (const [name] of carriers) $("carrier").add(new Option(name === "COSCO" ? "COSCO Shipping (COSCO)" : name, name));
+    $("carrier").value = "COSCO";
+
+    function emailList(value) {
+      return String(value || "").split(",").map((s) => s.trim()).filter(Boolean);
+    }
+
+    function selectedReference(shipment) {
+      const info = shipment.shipping_information || {};
+      const map = {
+        booking: info.booking_number,
+        bill_of_lading: info.bill_of_lading_number,
+        container: info.container_number
+      };
+      return map[info.tracking_reference_type] || info.booking_number || info.bill_of_lading_number || info.container_number || "";
+    }
+
+    function saveDraft() {
+      const draft = {
+        notifications: { email_recipients: emailList($("recipients").value) },
+        shipments
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    }
+
+    function setStatus(id, message, error = false) {
+      const node = $(id);
+      node.textContent = message;
+      node.classList.toggle("error", error);
+    }
+
+    function render() {
+      const body = $("shipment-rows");
+      body.replaceChildren();
+      if (shipments.length === 0) {
+        const row = body.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 6;
+        cell.className = "empty";
+        cell.textContent = "No shipments added yet.";
+        return;
+      }
+      shipments.forEach((shipment, index) => {
+        const info = shipment.shipping_information || {};
+        const row = body.insertRow();
+        [shipment.shipment_id, info.carrier, shipment.basic_information?.po_number || "", selectedReference(shipment), shipment.active ? "Yes" : "No"].forEach((value) => {
+          row.insertCell().textContent = value || "—";
+        });
+        const actions = row.insertCell();
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "secondary";
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => beginEdit(index));
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "danger";
+        remove.textContent = "Remove";
+        remove.style.marginLeft = "6px";
+        remove.addEventListener("click", () => {
+          shipments.splice(index, 1);
+          saveDraft();
+          render();
+          setStatus("list-status", "Shipment removed from the draft list.");
+        });
+        actions.append(edit, remove);
+      });
+    }
+
+    function clearForm() {
+      $("shipment-form").reset();
+      $("transport-mode").value = "Ocean";
+      $("weight-unit").value = "kg";
+      $("carrier").value = "COSCO";
+      $("reference-type").value = "bill_of_lading";
+      $("active").checked = true;
+      editIndex = -1;
+      $("save-shipment").textContent = "Add shipment";
+      $("cancel-edit").hidden = true;
+    }
+
+    function beginEdit(index) {
+      const s = shipments[index];
+      const b = s.basic_information || {};
+      const w = b.weight || {};
+      const i = s.shipping_information || {};
+      $("shipment-id").value = s.shipment_id || "";
+      $("order-type").value = b.order_type || "";
+      $("transport-mode").value = b.transport_mode || "Ocean";
+      $("po-number").value = b.po_number || "";
+      $("supplier").value = b.supplier || "";
+      $("material-type").value = b.material_type || "";
+      $("weight-value").value = w.value ?? "";
+      $("weight-unit").value = w.unit || "kg";
+      $("carrier").value = i.carrier || carriers[0][0];
+      $("reference-type").value = i.tracking_reference_type || "bill_of_lading";
+      $("bl-number").value = i.bill_of_lading_number || "";
+      $("booking-number").value = i.booking_number || "";
+      $("container-number").value = i.container_number || "";
+      $("shipment-recipients").value = (s.notifications?.email_recipients || []).join(", ");
+      $("active").checked = s.active !== false;
+      editIndex = index;
+      $("save-shipment").textContent = "Save changes";
+      $("cancel-edit").hidden = false;
+      setStatus("form-status", `Editing ${s.shipment_id || "shipment"}.`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    $("recipients").addEventListener("input", saveDraft);
+    $("cancel-edit").addEventListener("click", () => { clearForm(); setStatus("form-status", "Edit cancelled."); });
+    $("shipment-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const carrier = $("carrier").value;
+      const carrierEntry = carriers.find(([name]) => name === carrier);
+      const booking = $("booking-number").value.trim();
+      const bl = $("bl-number").value.trim();
+      const container = $("container-number").value.trim();
+      const refType = $("reference-type").value;
+      const chosen = { booking, bill_of_lading: bl, container }[refType];
+      if (!booking && !bl && !container) {
+        setStatus("form-status", "Enter a booking, bill of lading, or container number.", true);
+        return;
+      }
+      if (!chosen) {
+        setStatus("form-status", "Enter the tracking number type selected above.", true);
+        return;
+      }
+      let id = $("shipment-id").value.trim();
+      if (!id) id = `SHP-${new Date().toISOString().slice(0, 10)}-${String(Date.now()).slice(-5)}`;
+      if (shipments.some((s, i) => s.shipment_id === id && i !== editIndex)) {
+        setStatus("form-status", "That Shipment ID is already in the list. Use a unique ID.", true);
+        return;
+      }
+      const weightText = $("weight-value").value;
+      const item = {
+        shipment_id: id,
+        active: $("active").checked,
+        basic_information: {
+          order_type: $("order-type").value.trim(),
+          transport_mode: $("transport-mode").value,
+          po_number: $("po-number").value.trim(),
+          supplier: $("supplier").value.trim(),
+          material_type: $("material-type").value.trim(),
+          weight: { value: weightText === "" ? null : Number(weightText), unit: $("weight-unit").value }
+        },
+        shipping_information: {
+          carrier,
+          booking_number: booking,
+          bill_of_lading_number: bl,
+          container_number: container,
+          tracking_reference_type: refType,
+          tracking_url: carrierEntry ? carrierEntry[1] : ""
+        },
+        notifications: { email_recipients: emailList($("shipment-recipients").value) }
+      };
+      if (editIndex >= 0) shipments[editIndex] = item;
+      else shipments.push(item);
+      saveDraft();
+      render();
+      setStatus("form-status", `${id} ${editIndex >= 0 ? "updated" : "added"}.`);
+      clearForm();
+    });
+
+    $("download").addEventListener("click", () => {
+      const data = {
+        schema_version: 1,
+        notifications: {
+          email_recipients: emailList($("recipients").value),
+          email_daily_digest: true,
+          notify_on_status_change: true,
+          notify_on_eta_change: true
+        },
+        shipments
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "shipments.json";
+      link.click();
+      URL.revokeObjectURL(url);
+      setStatus("list-status", "Downloaded shipments.json. Put it in the Codex project folder.");
+    });
+
+    $("import").addEventListener("click", () => $("import-file").click());
+    $("import-file").addEventListener("change", (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(String(reader.result));
+          if (!Array.isArray(data.shipments)) throw new Error("The file must contain a shipments list.");
+          shipments = data.shipments;
+          $("recipients").value = (data.notifications?.email_recipients || []).join(", ");
+          saveDraft();
+          render();
+          setStatus("list-status", `Imported ${shipments.length} shipment(s).`);
+        } catch (error) {
+          setStatus("list-status", `Could not import file: ${error.message}`, true);
+        }
+        event.target.value = "";
+      };
+      reader.readAsText(file);
+    });
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved) {
+        shipments = Array.isArray(saved.shipments) ? saved.shipments : [];
+        $("recipients").value = (saved.notifications?.email_recipients || []).join(", ");
+      }
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+    render();
+  </script>
+</body>
+</html>

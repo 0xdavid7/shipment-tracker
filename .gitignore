@@ -1,0 +1,4 @@
+# Shipment data and tracking history can contain confidential business data.
+shipments.json
+tracking-results.json
+*.log

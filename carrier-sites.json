@@ -1,0 +1,50 @@
+{
+  "Maersk (MSK)": {
+    "website": "https://www.maersk.com/tracking/",
+    "identifiers": ["bill_of_lading", "container"]
+  },
+  "MSC": {
+    "website": "https://www.msc.com/en/track-a-shipment",
+    "identifiers": ["bill_of_lading", "container", "booking"]
+  },
+  "CMA CGM": {
+    "website": "https://www.cma-cgm.com/ebusiness/tracking",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "COSCO": {
+    "website": "https://elines.coscoshipping.com/",
+    "identifiers": ["bill_of_lading", "container"]
+  },
+  "Evergreen (EMC)": {
+    "website": "https://www.shipmentlink.com/servlet/TDB1_CargoTracking.do",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "ONE": {
+    "website": "https://www.one-line.com/",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "Hapag-Lloyd": {
+    "website": "https://www.hapag-lloyd.com/en/online-business/track/track.html",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "OOCL": {
+    "website": "https://www.oocl.com/",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "Yang Ming": {
+    "website": "https://www.yangming.com/en/esolution/tracking/cargo_tracking",
+    "identifiers": ["bill_of_lading", "container", "booking"]
+  },
+  "HMM": {
+    "website": "https://www.hmm21.com/e-service/general/trackNTrace/TrackNTrace.do",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  },
+  "PIL": {
+    "website": "https://www.pilship.com/",
+    "identifiers": ["bill_of_lading", "container"]
+  },
+  "ZIM": {
+    "website": "https://www.zim.com/",
+    "identifiers": ["booking", "bill_of_lading", "container"]
+  }
+}

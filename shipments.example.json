@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "notifications": {
+    "email_recipients": [],
+    "email_daily_digest": true,
+    "notify_on_status_change": true,
+    "notify_on_eta_change": true
+  },
+  "shipments": [
+    {
+      "shipment_id": "EXAMPLE-001",
+      "active": false,
+      "basic_information": {
+        "order_type": "",
+        "transport_mode": "Ocean",
+        "po_number": "",
+        "supplier": "",
+        "material_type": "",
+        "weight": {
+          "value": null,
+          "unit": "kg"
+        }
+      },
+      "shipping_information": {
+        "carrier": "COSCO",
+        "booking_number": "",
+        "bill_of_lading_number": "",
+        "container_number": "",
+        "tracking_reference_type": "bill_of_lading",
+        "tracking_url": "https://elines.coscoshipping.com/"
+      },
+      "notifications": {
+        "email_recipients": []
+      }
+    }
+  ]
+}
